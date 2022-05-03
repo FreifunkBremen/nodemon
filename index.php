@@ -1,7 +1,7 @@
 <?php
 
 /*
-2018, mortzu <mortzu@gmx.de>.
+2018 - 2022, mortzu <mortzu@uni-bremen.de>.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are
@@ -46,11 +46,9 @@ require_once __DIR__ . '/config.php';
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="vendor/twbs/bootstrap/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="vendor/simonwhitaker/github-fork-ribbon-css/gh-fork-ribbon.css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Arvo" type="text/css">
 <?php
 foreach ($config['view_additional_css'] as $additional_css)
-  echo "    <link rel=\"stylesheet\" href=\"{$additional_css}\" type=\"text/css\">\n";
+    echo "    <link rel=\"stylesheet\" href=\"{$additional_css}\" type=\"text/css\">\n";
 ?>
     <title><?php echo $config['view_title']; ?> - <?php echo $config['view_subtitle']; ?></title>
   </head>
@@ -60,13 +58,13 @@ foreach ($config['view_additional_css'] as $additional_css)
 
     <div class="container">
 <?php
-  echo $config['view_header_pre'];
+echo $config['view_header_pre'];
 ?>
       <hgroup>
         <h1><?php echo $config['view_title']; ?></h1>
         <h2><?php echo $config['view_subtitle']; ?></h2>
 <?php
-  echo $config['view_header'];
+echo $config['view_header'];
 ?>
       </hgroup>
 
@@ -75,63 +73,63 @@ foreach ($config['view_additional_css'] as $additional_css)
 <?php
 
 if (isset($_GET['delete']) && isset($_GET['token']) && !empty($_GET['token'])) {
-  foreach (glob(__DIR__ . '/data/verified/*') as $filename) {
-    $json_decoded = json_decode(file_get_contents($filename), true);
+    foreach (glob(__DIR__ . '/data/verified/*') as $filename) {
+        $json_decoded = json_decode(file_get_contents($filename), true);
 
-    if ($_GET['token'] == $json_decoded['token']) {
-      echo '<div class="alert alert-success" role="alert">' . $config['view_text_deleted'] . '</div>';
-      unlink($filename);
+        if ($_GET['token'] == $json_decoded['token']) {
+            echo '<div class="alert alert-success" role="alert">' . $config['view_text_deleted'] . '</div>';
+            unlink($filename);
+        }
     }
-  }
 } elseif (isset($_GET['token']) && !empty($_GET['token'])) {
-  foreach (glob(__DIR__ . '/data/pending/*') as $filename) {
-    $json_decoded = json_decode(file_get_contents($filename), true);
+    foreach (glob(__DIR__ . '/data/pending/*') as $filename) {
+        $json_decoded = json_decode(file_get_contents($filename), true);
 
-    if ($_GET['token'] == $json_decoded['token']) {
-      echo '<div class="alert alert-success" role="alert">' . $config['view_text_confirmed'] . '</div>';
-      rename($filename, __DIR__ . '/data/verified/' . basename($filename));
+        if ($_GET['token'] == $json_decoded['token']) {
+            echo '<div class="alert alert-success" role="alert">' . $config['view_text_confirmed'] . '</div>';
+            rename($filename, __DIR__ . '/data/verified/' . basename($filename));
+        }
     }
-  }
 } elseif (isset($_POST['nodename']) && !empty($_POST['nodename'])) {
-  $nodename = strtolower(preg_replace('/[^A-Za-z0-9-]/', '-', $_POST['nodename']));
+    $nodename = strtolower(preg_replace('/[^A-Za-z0-9-]/', '-', $_POST['nodename']));
 
-  if (false === $nodeinfo = file_get_contents('http://' . $nodename . '.' . $config['domain_suffix'] . '/cgi-bin/status')) {
-    if (false === $nodeinfo = file_get_contents('http://' . $nodename . '.' . $config['domain_suffix'] . '/cgi-bin/nodeinfo'))
-      echo '<div class="alert alert-danger" role="alert">' . $config['view_text_node_noconnect'] . '</div>';
-    elseif (NULL === $nodeinfo_json = json_decode($nodeinfo, true))
-      echo '<div class="alert alert-danger" role="alert">' . $config['view_text_node_parse'] . '</div>';
-    elseif (!isset($nodeinfo_json['owner']['contact']) || empty($nodeinfo_json['owner']['contact']))
-      echo '<div class="alert alert-danger" role="alert">' . $config['view_text_node_nomail'] . '</div>';
+    if (false === $nodeinfo = file_get_contents('http://' . $nodename . '.' . $config['domain_suffix'] . '/cgi-bin/status')) {
+        if (false === $nodeinfo = file_get_contents('http://' . $nodename . '.' . $config['domain_suffix'] . '/cgi-bin/nodeinfo'))
+            echo '<div class="alert alert-danger" role="alert">' . $config['view_text_node_noconnect'] . '</div>';
+        elseif (NULL === $nodeinfo_json = json_decode($nodeinfo, true))
+            echo '<div class="alert alert-danger" role="alert">' . $config['view_text_node_parse'] . '</div>';
+        elseif (!isset($nodeinfo_json['owner']['contact']) || empty($nodeinfo_json['owner']['contact']))
+            echo '<div class="alert alert-danger" role="alert">' . $config['view_text_node_nomail'] . '</div>';
+        else
+            $nodecontact = strtolower($nodeinfo_json['owner']['contact']);
+    } elseif (false === preg_match('/<dt>Contact<\/dt><dd>(.*)<\/dd>/', $nodeinfo, $nodecontact_array))
+        echo '<div class="alert alert-danger" role="alert">' . $config['view_text_node_nomail'] . '</div>';
     else
-      $nodecontact = strtolower($nodeinfo_json['owner']['contact']);
-  } elseif (false === preg_match('/<dt>Contact<\/dt><dd>(.*)<\/dd>/', $nodeinfo, $nodecontact_array))
-      echo '<div class="alert alert-danger" role="alert">' . $config['view_text_node_nomail'] . '</div>';
-  else
-    $nodecontact = strtolower($nodecontact_array[1]);
+        $nodecontact = strtolower($nodecontact_array[1]);
 
-  if (!empty($nodecontact)) {
-    if (!filter_var($nodecontact, FILTER_VALIDATE_EMAIL))
-      echo '<div class="alert alert-danger" role="alert">' . $config['view_text_node_novalidmail'] . '</div>';
-    elseif (file_exists(__DIR__ . '/data/pending/' . $nodename))
-      echo '<div class="alert alert-danger" role="alert">' . $config['view_text_node_already'] . '</div>';
-    else {
-      echo '<div class="alert alert-success" role="alert">' . $config['view_text_confirmation'] . '</div>';
+    if (!empty($nodecontact)) {
+        if (!filter_var($nodecontact, FILTER_VALIDATE_EMAIL))
+            echo '<div class="alert alert-danger" role="alert">' . $config['view_text_node_novalidmail'] . '</div>';
+        elseif (file_exists(__DIR__ . '/data/pending/' . $nodename))
+            echo '<div class="alert alert-danger" role="alert">' . $config['view_text_node_already'] . '</div>';
+        else {
+            echo '<div class="alert alert-success" role="alert">' . $config['view_text_confirmation'] . '</div>';
 
-      $token = md5(time());
+            $token = md5(time());
 
-      file_put_contents(__DIR__ . '/data/pending/' . $nodename, json_encode(array('token' => $token, 'mail' => $nodecontact)));
+            file_put_contents(__DIR__ . '/data/pending/' . $nodename, json_encode(array('token' => $token, 'mail' => $nodecontact)));
 
-      $mail = new PHPMailer;
-      $mail->isSendmail();
-      $mail->CharSet = 'utf-8';
-      $mail->setFrom($config['email_from']);
-      $mail->addAddress($nodecontact);
-      $mail->isHTML(false);
-      $mail->Subject = $config['email_subject_confirmation'];
-      $mail->Body = str_replace(array('___LINK_CONFIRM___', '___LINK_DELETE___', '___EMAIL___'), array($_SERVER['SCRIPT_URI'] . '?token=' . $token, $_SERVER['SCRIPT_URI'] . '?delete&token=' . $token, $nodecontact), $config['email_message_confirmation']);
-      $mail->send();
+            $mail = new PHPMailer;
+            $mail->isSendmail();
+            $mail->CharSet = 'utf-8';
+            $mail->setFrom($config['email_from']);
+            $mail->addAddress($nodecontact);
+            $mail->isHTML(false);
+            $mail->Subject = $config['email_subject_confirmation'];
+            $mail->Body = str_replace(array('___LINK_CONFIRM___', '___LINK_DELETE___', '___EMAIL___'), array($_SERVER['SCRIPT_URI'] . '?token=' . $token, $_SERVER['SCRIPT_URI'] . '?delete&token=' . $token, $nodecontact), $config['email_message_confirmation']);
+            $mail->send();
+        }
     }
-  }
 } else {
 
 ?>
