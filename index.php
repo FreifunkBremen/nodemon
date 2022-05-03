@@ -126,7 +126,7 @@ if (isset($_GET['delete']) && isset($_GET['token']) && !empty($_GET['token'])) {
             $mail->addAddress($nodecontact);
             $mail->isHTML(false);
             $mail->Subject = $config['email_subject_confirmation'];
-            $mail->Body = str_replace(array('___LINK_CONFIRM___', '___LINK_DELETE___', '___EMAIL___'), array($_SERVER['SCRIPT_URI'] . '?token=' . $token, $_SERVER['SCRIPT_URI'] . '?delete&token=' . $token, $nodecontact), $config['email_message_confirmation']);
+            $mail->Body = str_replace(array('___LINK_CONFIRM___', '___LINK_DELETE___', '___EMAIL___'), array($_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['SERVER_NAME'] . '/?token=' . $token, $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['SERVER_NAME'] . '/?delete&token=' . $token, $nodecontact), $config['email_message_confirmation']);
             $mail->send();
         }
     }
@@ -134,7 +134,7 @@ if (isset($_GET['delete']) && isset($_GET['token']) && !empty($_GET['token'])) {
 
 ?>
 
-        <form method="post" action="<?php echo $_SERVER['SCRIPT_URI']; ?>">
+        <form method="post" action="<?php echo $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['SERVER_NAME']; ?>/">
           <div class="form-group row">
             <div class="col-xs-8 col-md-10">
               <input type="text" class="form-control" id="nodename" placeholder="Nodename" name="nodename" autofocus>
