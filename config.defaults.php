@@ -1,6 +1,6 @@
 <?php
 
-$config['sync_with_nodes_json'] = 'https://example.org/nodes.json';
+$config['meshviewer_json_url'] = '';
 $config['url_base'] = 'https://example.org/';
 $config['view_additional_css'] = array();
 $config['view_footer'] = '';
